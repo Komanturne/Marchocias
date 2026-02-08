@@ -38,7 +38,6 @@ class Marchocias:
 
         self.master_key = key
 
-        # --- Derive internal working keys ---
         digest = hashlib.sha512(key).digest()
 
         self.idea_key = digest[0:16]
@@ -152,11 +151,9 @@ class Marchocias:
         k1_inv = self._mul_mod_inv(k1)
         k2_inv = self._mul_mod_inv(k2)
         
-        # t1 = a_mul_k1 + t2, so: a_mul_k1 = t1 - t2
         a_mul_k1 = self._sub_mod(t1, t2)
         a = self._mul_mod(a_mul_k1, k1_inv)
         
-        # t2 = (b + a_mul_k1) * k2, so: b + a_mul_k1 = t2 * k2_inv
         b_plus_a_mul_k1 = self._mul_mod(t2, k2_inv)
         b = self._sub_mod(b_plus_a_mul_k1, a_mul_k1)
         
@@ -289,7 +286,6 @@ class Marchocias:
             v[1] & 0xFFFF
         ]
         
-        # 64 hybrid rounds
         for k in range(16):
             w = self._hybrid_round(w, k, is_a_round=True)
         for k in range(16, 32):
@@ -317,7 +313,6 @@ class Marchocias:
         ]
         v = self._tiny_decrypt(v)
         
-        # Convert to four 16-bit words
         w = [
             (v[0] >> 16) & 0xFFFF,
             v[0] & 0xFFFF,
@@ -325,7 +320,6 @@ class Marchocias:
             v[1] & 0xFFFF
         ]
         
-        # Reverse 64 hybrid rounds
         for k in range(63, 47, -1):
             w = self._hybrid_round_inv(w, k, is_a_round=False)
         for k in range(47, 31, -1):
@@ -372,3 +366,55 @@ class Marchocias:
                 raise ValueError("Invalid padding")
         
         return plaintext[:-padding_length]
+    
+    def hash(self, data):
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        
+        return hashlib.sha3_384(data).digest()
+    
+    def hash_hex(self, data):
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        
+        return hashlib.sha3_384(data).hexdigest()
+    
+    def keyed_hash(self, data, purpose=b''):
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        if isinstance(purpose, str):
+            purpose = purpose.encode('utf-8')
+        
+        inner = hashlib.sha3_384(self.master_key + data + purpose).digest()
+        outer = hashlib.sha3_384(self.master_key + inner).digest()
+        
+        return outer
+    
+    def keyed_hash_hex(self, data, purpose=b''):
+        return self.keyed_hash(data, purpose).hex()
+    
+    def verify_hash(self, data, hash_value, purpose=b''):
+        if isinstance(hash_value, str):
+            hash_value = bytes.fromhex(hash_value)
+        
+        computed = self.keyed_hash(data, purpose)
+
+        if len(computed) != len(hash_value):
+            return False
+        
+        result = 0
+        for a, b in zip(computed, hash_value):
+            result |= a ^ b
+        
+        return result == 0
+
+def sha3_384_hash(data):
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    return hashlib.sha3_384(data).digest()
+
+
+def sha3_384_hash_hex(data):
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    return hashlib.sha3_384(data).hexdigest()
