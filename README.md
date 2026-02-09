@@ -3,6 +3,8 @@
 
 This is an encryption algorithm that is written in *Python* and uses the Skipjack F-table, while improving on the original algorithm by using a **384 bit** key-size, and **64** rounds. This also uses some elements of certain *Lai-Massay Algorithms* in order to avoid the pitfalls of Feistal algorithms, specifically by adding more operations *(and obviously using them)* than Feistal algorithms usually use, though this still uses the majority of the Feistal algorithms blueprints. This algorithm also includes the *Tiny Encryption Algorithm* as padding in the beginning and the end in order to prevent certain baggage, though this is not necessarily a security measure meant to prevent decryption, but to increase breaking-time. This is made as a passion project, and the code-base is admitably kinda scuffed, but I believe that it's still acceptable and doesn't get in the way of performance or readability.
 
+Note: It now includes a hash function, which should add extra security.
+
 ## Instructions & Example
 In order to use the program, you will need to:
 1. Copy the Github Repo, either through *"git clone"* or you can copy the file *"marchocias.py"*
